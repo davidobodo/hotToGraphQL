@@ -1,5 +1,6 @@
 import { useMutation, gql } from "@apollo/client";
-import { AUTH_TOKEN } from "../constants";
+import { useNavigate } from "react-router-dom";
+import { AUTH_TOKEN, LINKS_PER_PAGE } from "../constants";
 import { timeDifferenceForDate } from "../utils";
 import { FEED_QUERY } from "./LinkList";
 const VOTE_MUTATION = gql`
@@ -23,6 +24,10 @@ const VOTE_MUTATION = gql`
 `;
 
 const Link = (props) => {
+	const take = LINKS_PER_PAGE;
+	const skip = 0;
+	const orderBy = { createdAt: "desc" };
+
 	const { link } = props;
 	const authToken = localStorage.getItem(AUTH_TOKEN);
 
@@ -33,6 +38,11 @@ const Link = (props) => {
 		update: (cache, { data: { vote } }) => {
 			const { feed } = cache.readQuery({
 				query: FEED_QUERY,
+				variables: {
+					take,
+					skip,
+					orderBy,
+				},
 			});
 
 			const updatedLinks = feed.links.map((feedLink) => {
@@ -52,9 +62,16 @@ const Link = (props) => {
 						links: updatedLinks,
 					},
 				},
+				variables: {
+					take,
+					skip,
+					orderBy,
+				},
 			});
 		},
 	});
+
+	const navigate = useNavigate();
 
 	return (
 		<div className="flex mt2 items-start">
@@ -67,7 +84,7 @@ const Link = (props) => {
 				)}
 			</div>
 			<div className="ml1">
-				<div>
+				<div onClick={() => navigate(`/post/${link.id}`)}>
 					{link.description} ({link.url})
 				</div>
 				{
